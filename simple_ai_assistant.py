@@ -1,15 +1,35 @@
 from openai import OpenAI
+import os
+#pip install python-dotenv
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
 
 client = OpenAI(
-    base_url="http://127.0.0.1:11434/v1/",
-    api_key="YOUR_API_KEY"
+    base_url=os.getenv("BASE_URL"),
+    api_key=os.getenv("API_KEY")
 )
 
-response = client.chat.completions.create(
-    model="qwen3:0.6b",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "What is the capital of France?"}
-    ]
-)
-print(response.choices[0].message.content)
+#adding memory
+messages = []
+
+while True:
+    user_input = input("You: ")
+    if user_input.lower() in ["exit", "quit"]:
+        break
+
+    messages.append({"role": "user", "content": user_input})
+
+    response = client.chat.completions.create(
+        model=os.getenv("MODEL"),
+        messages=messages
+    )
+
+    messages.append({"role": "assistant", "content": response.choices[0].message.content})
+
+    print("Assistant:", response.choices[0].message.content)
+    print("role:", response.choices[0].message.role)
+
+
+
+#llms are stateless, so we need to maintain the conversation history ourselves. We can do this by storing the messages in a list and passing it to the API with each request.
